@@ -3,92 +3,53 @@ const cors = require('cors');
 const mariadb = require('mariadb');
 
 const app = express();
-app.use(cors());
 
+// 🔥 IMPORTANTE PARA RENDER
+const PORT = process.env.PORT || 3000;
+
+app.use(cors());
+app.use(express.json());
+
+// 🔌 CONEXIÓN A MARIADB (AJUSTA TU PUERTO SI ES 3308)
 const pool = mariadb.createPool({
     host: '127.0.0.1',
     user: 'root',
     password: '',
     database: 'usuarios',
-    port: 3308,
+    port: 3306, // ⚠️ cambia a 3308 si usas ese
     connectionLimit: 5
 });
 
-// 🔥 RUTA BONITA
+// 🚀 RUTA API
 app.get('/api/usuarios', async (req, res) => {
     let conn;
     try {
         conn = await pool.getConnection();
-        const datos = await conn.query("SELECT * FROM usuarios");
 
-        let html = `
-        <html>
-        <head>
-            <title>Usuarios</title>
-            <style>
-                body {
-                    font-family: Arial;
-                    background: #0f172a;
-                    color: white;
-                    text-align: center;
-                }
-                table {
-                    margin: auto;
-                    border-collapse: collapse;
-                    width: 50%;
-                    background: #1e293b;
-                    border-radius: 10px;
-                    overflow: hidden;
-                }
-                th, td {
-                    padding: 12px;
-                    border-bottom: 1px solid #334155;
-                }
-                th {
-                    background: #38bdf8;
-                    color: black;
-                }
-                tr:hover {
-                    background: #334155;
-                }
-                h1 {
-                    margin-top: 30px;
-                }
-            </style>
-        </head>
-        <body>
-            <h1>Lista de Usuarios 🚀</h1>
-            <table>
-                <tr>
-                    <th>ID</th>
-                    <th>Nombre</th>
-                </tr>
-        `;
+        const rows = await conn.query("SELECT * FROM usuarios");
 
-        datos.forEach(u => {
-            html += `
-                <tr>
-                    <td>${u.id}</td>
-                    <td>${u.nombre}</td>
-                </tr>
-            `;
+        res.json({
+            status: "OK",
+            data: rows
         });
 
-        html += `
-            </table>
-        </body>
-        </html>
-        `;
-
-        res.send(html);
-
     } catch (err) {
-        res.send(err);
+        console.error("❌ ERROR:", err);
+        res.status(500).json({
+            status: "Error",
+            mensaje: err.message
+        });
     } finally {
         if (conn) conn.release();
     }
 });
 
-app.listen(3000, () => {
-    console.log("Servidor en http://localhost:3000");
+// 🧠 RUTA BASE (para que no truene en Render)
+app.get('/', (req, res) => {
+    res.send("API funcionando 🚀");
+});
+
+// 🚀 INICIAR SERVIDOR
+app.listen(PORT, () => {
+    console.log(`Servidor corriendo en puerto ${PORT}`);
 });
