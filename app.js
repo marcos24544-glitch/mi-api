@@ -1,55 +1,38 @@
 const express = require('express');
 const cors = require('cors');
-const mariadb = require('mariadb');
 
 const app = express();
-
-// 🔥 IMPORTANTE PARA RENDER
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
 
-// 🔌 CONEXIÓN A MARIADB (AJUSTA TU PUERTO SI ES 3308)
-const pool = mariadb.createPool({
-    host: '127.0.0.1',
-    user: 'root',
-    password: '',
-    database: 'usuarios',
-    port: 3306, // ⚠️ cambia a 3308 si usas ese
-    connectionLimit: 5
-});
+// Datos simulados (igual que los de tu base)
+const usuarios = [
+    { id: 1, nombre: "Marcos López Lira" },
+    { id: 2, nombre: "Jose Geovanni Perales Godinez" },
+    { id: 3, nombre: "Jose Miguel Jimenez Gonzales" },
+    { id: 4, nombre: "Samuel Martinez Venegas" },
+    { id: 5, nombre: "Luis Moncada Gonzales" }
+];
 
-// 🚀 RUTA API
-app.get('/api/usuarios', async (req, res) => {
-    let conn;
-    try {
-        conn = await pool.getConnection();
-
-        const rows = await conn.query("SELECT * FROM usuarios");
-
-        res.json({
-            status: "OK",
-            data: rows
-        });
-
-    } catch (err) {
-        console.error("❌ ERROR:", err);
-        res.status(500).json({
-            status: "Error",
-            mensaje: err.message
-        });
-    } finally {
-        if (conn) conn.release();
-    }
-});
-
-// 🧠 RUTA BASE (para que no truene en Render)
+// Ruta principal
 app.get('/', (req, res) => {
-    res.send("API funcionando 🚀");
+    res.send(`
+        <h1>API de Usuarios - Funcionando 🚀</h1>
+        <p>Ve a: <a href="/api/usuarios">/api/usuarios</a></p>
+    `);
 });
 
-// 🚀 INICIAR SERVIDOR
+// Ruta de la API
+app.get('/api/usuarios', (req, res) => {
+    res.json({
+        status: "OK",
+        total: usuarios.length,
+        data: usuarios
+    });
+});
+
 app.listen(PORT, () => {
     console.log(`Servidor corriendo en puerto ${PORT}`);
 });
